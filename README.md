@@ -1,24 +1,40 @@
-# iArchive
+# 📦 iArchive
 
 ![iArchive Logo](assets/logo.png)
 
-**iArchive** is a minimalist, modern file archiver built with Python and PyQt6. It provides a clean interface for creating, extracting, and managing archive files with a focus on user experience.
+**iArchive** is a minimalist, warm-themed desktop application built with **Python** and **PyQt6**. It creates, manages, and extracts various archive and compression formats with a focus on simplicity and ease of use.
 
-## Features
+---
 
-* **🎨 Minimalist UI:** A clean, Brown & Orange "Warm Modern" theme.
-* **🖱️ Drag & Drop:** Drag files directly from your file manager to archive them.
-* **📂 Format Support:** * **Create:** Zip, Tar, Gzip, Bzip2, Xz.
-    * **Extract:** Zip, Tar, Gzip, Bzip2, Xz, 7z*, Rar*.
-* **🔒 Security:** Create password-protected Zip files (AES encryption compatible).
-* **🛠️ Manage Archives:** Inspect archive contents, verify SHA-256 checksums, append files, and delete entries (Tar only).
-* **🍎 Native Feel:** Optimized for macOS with native file dialogs and system tool integration.
+## ✨ Features
+
+### 1. Archiving & Compression
+* **Supported Formats:**
+  * **Archives:** `.tar`, `.zip`
+  * **Compression Only:** `.gz`, `.bz2`, `.xz`
+  * **External Formats:** `.7z`, `.rar` (Requires external configuration)
+* **Recursive Options:** Choose whether to include sub-directories or just the root folder files.
+* **Drag & Drop:** Simply drag files into the window to add them to the list.
+* **Password Protection:** Support for encrypted `.zip` files (requires system `zip` utility).
+
+### 2. Extraction (Unzip)
+* Extracts files from `.zip`, `.tar`, `.tar.gz`, and `.gz`.
+* **Smart Exclusion:** Filter out specific file types (e.g., `.DS_Store`, `.tmp`) during extraction.
+
+### 3. Archive Management
+* **Inspect:** View the contents of an archive without extracting it.
+* **Checksum:** Automatically calculates **SHA-256** checksums for file verification.
+* **Modify:**
+  * **Append:** Add new files to existing `.tar` or `.zip` archives.
+  * **Delete:** Remove specific files from `.tar` archives (Repacking supported).
+
+---
 
 ## Installation
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/yourusername/iarchive.git](https://github.com/yourusername/iarchive.git)
+    git clone [https://github.com/azerndo/iArchive.git]
     cd iarchive
     ```
 
