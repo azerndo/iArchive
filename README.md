@@ -2,7 +2,7 @@
 
 ![iArchive Logo](assets/logo.png)
 
-**iArchive** is a minimalist, modern file archiver built with Python and PyQt6. It provides a clean interface for creating, extracting, and managing archive files with a focus on user experience and macOS aesthetics.
+**iArchive** is a minimalist, modern file archiver built with Python and PyQt6. It provides a clean interface for creating, extracting, and managing archive files with a focus on user experience.
 
 ## Features
 
