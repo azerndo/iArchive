@@ -9,6 +9,12 @@ import bz2
 import lzma
 import subprocess
 
+try:
+    import pyzipper
+    HAS_PYZIPPER = True
+except ImportError:
+    HAS_PYZIPPER = False
+
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                              QHBoxLayout, QLabel, QPushButton, QTabWidget, 
                              QFileDialog, QComboBox, QCheckBox, QLineEdit, 
@@ -485,35 +491,63 @@ class IArchiveApp(QMainWindow):
         if not exclude_ext: return False
         return filename.endswith(exclude_ext)
 
-    # --- ZIP CREATION WITH MAC SYSTEM FALLBACK ---
     def create_zip(self, files, dest, pwd, recursive, exclude):
+        # STRATEGY 1: Use pyzipper (Recommended for AES Encryption)
+        if HAS_PYZIPPER and pwd:
+            try:
+                # WZ_AES is the standard strong encryption
+                with pyzipper.AESZipFile(dest, 'w', compression=zipfile.ZIP_DEFLATED, encryption=pyzipper.WZ_AES) as zf:
+                    zf.setpassword(pwd.encode('utf-8'))
+                    self._write_to_zip(zf, files, recursive, exclude)
+                return
+            except Exception as e:
+                raise Exception(f"pyzipper error: {str(e)}")
+
+        # STRATEGY 2: Fallback to System Command (Weak Encryption - Legacy ZipCrypto)
+        # Note: macOS Finder often fails to open these. Use 'The Unarchiver' or 'Keka'.
         if pwd:
             try:
+                # Check if zip is installed
                 subprocess.run(["zip", "-h"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-                cmd = ["zip", "-P", pwd, "-j", dest] + files
+                
+                # Construct command
+                # -P: Password
+                # -r: Recursive (essential for folders)
+                cmd = ["zip", "-P", pwd, "-r", dest] + files
+                
+                # If NOT recursive, we might want -j (junk paths), but be careful with folders
+                if not recursive:
+                    cmd = ["zip", "-P", pwd, "-j", dest] + files
+
                 subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 return 
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                pass
-        
-        if pwd:
-             raise Exception("For password protection on Mac, ensure the system 'zip' tool is working.")
+            except FileNotFoundError:
+                raise Exception("System 'zip' command not found. Please install 'pyzipper' via pip for password support.")
+            except subprocess.CalledProcessError as e:
+                raise Exception(f"System zip command failed. Ensure you have permissions.")
 
+        # STRATEGY 3: Standard Python Zipfile (No Password)
         with zipfile.ZipFile(dest, 'w', zipfile.ZIP_DEFLATED) as zf:
-            for f in files:
-                if os.path.isfile(f):
-                    if not self._should_exclude(f, exclude):
-                        zf.write(f, os.path.basename(f))
-                elif os.path.isdir(f):
-                    if recursive:
-                        for root, dirs, filenames in os.walk(f):
-                            for filename in filenames:
-                                if not self._should_exclude(filename, exclude):
-                                    filepath = os.path.join(root, filename)
-                                    arcname = os.path.relpath(filepath, os.path.dirname(f))
-                                    zf.write(filepath, arcname)
-                    else:
-                        zf.write(f, os.path.basename(f))
+            self._write_to_zip(zf, files, recursive, exclude)
+
+    def _write_to_zip(self, zf, files, recursive, exclude):
+        """Helper to write files to a zip object (works for both zipfile and pyzipper)"""
+        for f in files:
+            if os.path.isfile(f):
+                if not self._should_exclude(f, exclude):
+                    zf.write(f, os.path.basename(f))
+            elif os.path.isdir(f):
+                if recursive:
+                    for root, dirs, filenames in os.walk(f):
+                        for filename in filenames:
+                            if not self._should_exclude(filename, exclude):
+                                filepath = os.path.join(root, filename)
+                                # Create relative path inside archive
+                                arcname = os.path.relpath(filepath, os.path.dirname(f))
+                                zf.write(filepath, arcname)
+                else:
+                    # If not recursive, just add the folder entry empty
+                    zf.write(f, os.path.basename(f))
 
     def create_tar(self, files, dest, mode, recursive, exclude):
         with tarfile.open(dest, mode) as tf:
