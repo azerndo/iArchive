@@ -139,12 +139,13 @@ FORMAT_CONFIG = {
 # --- CUSTOM WIDGETS ---
 
 class DragDropListWidget(QListWidget):
-    """A ListWidget that accepts file drags."""
+    """A ListWidget that accepts file drags and supports deletion."""
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setAcceptDrops(True)
         self.setDragDropMode(QAbstractItemView.DragDropMode.DropOnly)
         self.setAlternatingRowColors(True)
+        self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection) # Allow selecting multiple files
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
@@ -176,6 +177,18 @@ class DragDropListWidget(QListWidget):
                 icon = icon_provider.standardIcon(QStyle.StandardPixmap.SP_FileIcon)
             item.setIcon(icon)
             self.addItem(item)
+
+    # --- NEW: Handle Delete Key ---
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
+            self.remove_selected()
+        else:
+            super().keyPressEvent(event)
+
+    # --- Helper to remove items ---
+    def remove_selected(self):
+        for item in self.selectedItems():
+            self.takeItem(self.row(item))
 
 # --- WORKERS ---
 
@@ -240,20 +253,30 @@ class IArchiveApp(QMainWindow):
         self.file_list.setToolTip("Drag and drop files from Finder here")
         
         btn_row = QHBoxLayout()
+        
+        # 1. Browse Button
         self.btn_add_files = QPushButton("Browse Files")
         self.btn_add_files.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogOpenButton))
         self.btn_add_files.clicked.connect(self.add_files_action)
         
-        self.btn_clear_files = QPushButton("Clear")
+        # 2. NEW: Remove Selected Button
+        self.btn_remove_file = QPushButton("Remove Selected")
+
+        self.btn_remove_file.setStyleSheet(f"background-color: {COLORS['border']}; color: {COLORS['text']};")
+        self.btn_remove_file.clicked.connect(self.file_list.remove_selected) # Connect directly to the list widget's method
+        
+        # 3. Clear Button
+        self.btn_clear_files = QPushButton("Clear All")
         self.btn_clear_files.setStyleSheet(f"background-color: {COLORS['border']}; color: {COLORS['text']};")
         self.btn_clear_files.clicked.connect(self.file_list.clear)
         
         btn_row.addWidget(self.btn_add_files)
+        btn_row.addWidget(self.btn_remove_file)
         btn_row.addWidget(self.btn_clear_files)
         btn_row.addStretch()
         
         src_layout.addWidget(self.file_list)
-        src_layout.addLayout(btn_row)
+        src_layout.addLayout(btn_row) 
         src_group.setLayout(src_layout)
         
         # 2. Settings
