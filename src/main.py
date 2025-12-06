@@ -37,16 +37,28 @@ COLORS = {
 }
 
 STYLESHEET = f"""
-    QMainWindow {{ background-color: {COLORS["bg"]}; }}
-    
-    QLabel {{ 
-        font-size: 13px; 
+    /* --- GLOBAL WINDOW SETTINGS --- */
+    /* Force background on Main Window, Dialogs, and Message Boxes */
+    QMainWindow, QDialog, QMessageBox {{ 
+        background-color: {COLORS["bg"]}; 
+        color: {COLORS["text"]};
+    }}
+
+    /* Force generic text color on all labels and checkboxes */
+    QLabel, QCheckBox, QRadioButton {{ 
         color: {COLORS["text"]}; 
-        font-family: 'Helvetica Neue', 'Segoe UI', sans-serif;
-        font-weight: 500;
+        background-color: transparent; /* Fixes text having weird background blocks */
+    }}
+
+    /* --- MESSAGE BOX SPECIFICS --- */
+    QMessageBox {{
+        background-color: {COLORS["bg"]};
+    }}
+    QMessageBox QLabel {{
+        color: {COLORS["text"]}; 
     }}
     
-    /* Modern Buttons */
+    /* --- BUTTONS --- */
     QPushButton {{
         background-color: {COLORS["accent"]}; 
         color: white; 
@@ -58,13 +70,13 @@ STYLESHEET = f"""
     }}
     QPushButton:hover {{ 
         background-color: {COLORS["accent_hover"]}; 
-        margin-top: -1px; /* Subtle lift effect */
+        margin-top: -1px; 
     }}
     QPushButton:pressed {{ margin-top: 1px; }}
     QPushButton:disabled {{ background-color: {COLORS['border']}; color: #8D6E63; }}
     QPushButton#danger {{ background-color: {COLORS['danger']}; }}
     
-    /* Modern Inputs */
+    /* --- INPUTS --- */
     QLineEdit, QComboBox {{
         border: 1px solid {COLORS["border"]};
         border-radius: 8px;
@@ -72,19 +84,21 @@ STYLESHEET = f"""
         background-color: white;
         color: {COLORS["text"]};
         font-size: 13px;
+        selection-background-color: {COLORS["accent"]};
+        selection-color: white;
     }}
     QLineEdit:focus, QComboBox:focus {{
-        border: 2px solid {COLORS["accent"]}; /* Orange glow on focus */
+        border: 2px solid {COLORS["accent"]}; 
     }}
     
-    /* Modern Tabs */
+    /* --- TABS --- */
     QTabWidget::pane {{ border: none; }}
     QTabBar::tab {{
         background: {COLORS["border"]};
         color: {COLORS["text"]};
         padding: 8px 24px;
         margin-right: 8px;
-        border-radius: 16px; /* Pill shape */
+        border-radius: 16px; 
         font-weight: bold;
     }}
     QTabBar::tab:selected {{ 
@@ -92,19 +106,14 @@ STYLESHEET = f"""
         color: white; 
     }}
     
-    /* Lists & Tables */
+    /* --- LISTS & TABLES --- */
     QListWidget, QTableWidget {{ 
         border: 1px solid {COLORS['border']}; 
         border-radius: 8px;
         background-color: white;
         color: {COLORS["text"]};
         padding: 5px;
-    }}
-    QTableWidget::item {{ padding: 5px; }}
-    QTableWidget::item:selected, QListWidget::item:selected {{
-        background-color: {COLORS["highlight"]};
-        color: {COLORS["text"]};
-        border-radius: 4px;
+        outline: 0; /* Removes dotted line on selection */
     }}
     QHeaderView::section {{ 
         background-color: {COLORS["bg"]}; 
@@ -113,8 +122,17 @@ STYLESHEET = f"""
         font-weight: bold;
         color: {COLORS["text"]}; 
     }}
-    
-    /* Group Box */
+    /* Force item text color to ensure visibility */
+    QTableWidget::item, QListWidget::item {{
+        color: {COLORS["text"]};
+    }}
+    QTableWidget::item:selected, QListWidget::item:selected {{
+        background-color: {COLORS["highlight"]};
+        color: {COLORS["text"]}; /* Keep text dark on highlight */
+        border-radius: 4px;
+    }}
+
+    /* --- GROUP BOX --- */
     QGroupBox {{ 
         border: 1px solid {COLORS["border"]}; 
         border-radius: 8px; 
