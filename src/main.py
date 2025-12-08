@@ -47,7 +47,7 @@ STYLESHEET = f"""
     /* Force generic text color on all labels and checkboxes */
     QLabel, QCheckBox, QRadioButton {{ 
         color: {COLORS["text"]}; 
-        background-color: transparent; /* Fixes text having weird background blocks */
+        background-color: transparent;
     }}
 
     /* --- MESSAGE BOX SPECIFICS --- */
@@ -156,14 +156,14 @@ FORMAT_CONFIG = {
 
 # --- CUSTOM WIDGETS ---
 
-class DragDropListWidget(QListWidget):
+class DragDropListWidget(QListWidget): # for the create archive tabb
     """A ListWidget that accepts file drags and supports deletion."""
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setAcceptDrops(True)
         self.setDragDropMode(QAbstractItemView.DragDropMode.DropOnly)
         self.setAlternatingRowColors(True)
-        self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection) # Allow selecting multiple files
+        self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection) # this allows multi-select or multi-deletion ng files
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
@@ -196,7 +196,8 @@ class DragDropListWidget(QListWidget):
             item.setIcon(icon)
             self.addItem(item)
 
-    # --- NEW: Handle Delete Key ---
+    # --- Handle Delete Key ---
+    # selecting a file and pressing delete will remove it from the list
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
             self.remove_selected()
@@ -238,7 +239,7 @@ class IArchiveApp(QMainWindow):
         
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
-        # Add margin to main layout for "breathing room"
+
         layout = QVBoxLayout(main_widget)
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(15)
@@ -262,11 +263,11 @@ class IArchiveApp(QMainWindow):
         layout.setSpacing(20)
         layout.setContentsMargins(10, 20, 10, 10)
 
-        # 1. Input Selection (With Drag & Drop)
+        # 1. Input Selection
         src_group = QGroupBox("1. Drag Files Here")
         src_layout = QVBoxLayout()
         
-        self.file_list = DragDropListWidget() # Custom Widget
+        self.file_list = DragDropListWidget()
         self.file_list.setFixedHeight(120)
         self.file_list.setToolTip("Drag and drop files from Finder here")
         
@@ -277,11 +278,11 @@ class IArchiveApp(QMainWindow):
         self.btn_add_files.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogOpenButton))
         self.btn_add_files.clicked.connect(self.add_files_action)
         
-        # 2. NEW: Remove Selected Button
+        # 2. Remove Selected Button
         self.btn_remove_file = QPushButton("Remove Selected")
 
         self.btn_remove_file.setStyleSheet(f"background-color: {COLORS['border']}; color: {COLORS['text']};")
-        self.btn_remove_file.clicked.connect(self.file_list.remove_selected) # Connect directly to the list widget's method
+        self.btn_remove_file.clicked.connect(self.file_list.remove_selected)
         
         # 3. Clear Button
         self.btn_clear_files = QPushButton("Clear All")
@@ -349,7 +350,7 @@ class IArchiveApp(QMainWindow):
         btn_dest.clicked.connect(self.set_destination_action)
         
         self.btn_process = QPushButton("Create Archive")
-        self.btn_process.setMinimumHeight(45) # Bigger CTA button
+        self.btn_process.setMinimumHeight(45) 
         self.btn_process.clicked.connect(self.process_archive_action)
         
         act_layout.addWidget(btn_dest)
@@ -372,7 +373,6 @@ class IArchiveApp(QMainWindow):
         layout.setContentsMargins(10, 20, 10, 10)
         layout.setSpacing(20)
 
-        # Container for form
         form_container = QWidget()
         form_layout = QVBoxLayout(form_container)
         form_layout.setSpacing(15)
@@ -438,7 +438,7 @@ class IArchiveApp(QMainWindow):
         self.table_files.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_files.setAlternatingRowColors(True)
         self.table_files.verticalHeader().setVisible(False)
-        self.table_files.setShowGrid(False) # Cleaner look
+        self.table_files.setShowGrid(False) 
         layout.addWidget(self.table_files)
 
         self.lbl_checksum = QLabel("Checksum: N/A")
@@ -536,7 +536,6 @@ class IArchiveApp(QMainWindow):
         # STRATEGY 1: Use pyzipper (Recommended for AES Encryption)
         if HAS_PYZIPPER and pwd:
             try:
-                # WZ_AES is the standard strong encryption
                 with pyzipper.AESZipFile(dest, 'w', compression=zipfile.ZIP_DEFLATED, encryption=pyzipper.WZ_AES) as zf:
                     zf.setpassword(pwd.encode('utf-8'))
                     self._write_to_zip(zf, files, recursive, exclude)
@@ -544,7 +543,7 @@ class IArchiveApp(QMainWindow):
             except Exception as e:
                 raise Exception(f"pyzipper error: {str(e)}")
 
-        # STRATEGY 2: Fallback to System Command (Weak Encryption - Legacy ZipCrypto)
+        # STRATEGY 2: Fallback to System Command 
         # Note: macOS Finder often fails to open these. Use 'The Unarchiver' or 'Keka'.
         if pwd:
             try:
@@ -587,7 +586,7 @@ class IArchiveApp(QMainWindow):
                                 arcname = os.path.relpath(filepath, os.path.dirname(f))
                                 zf.write(filepath, arcname)
                 else:
-                    # If not recursive, just add the folder entry empty
+                    # if hindi recursive, just add the folder entry empty
                     zf.write(f, os.path.basename(f))
 
     def create_tar(self, files, dest, mode, recursive, exclude):
@@ -661,7 +660,6 @@ class IArchiveApp(QMainWindow):
         f, _ = QFileDialog.getOpenFileName(self, "Open Archive")
         if not f: return
         
-        # FIX: Cleanup previous worker
         if self.worker is not None and self.worker.isRunning():
             self.worker.terminate()
             self.worker.wait()
